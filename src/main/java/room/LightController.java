@@ -2,7 +2,11 @@ package room;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
 import com.amazon.speech.slu.Intent;
 import com.amazon.speech.speechlet.IntentRequest;
 import com.amazon.speech.speechlet.LaunchRequest;
@@ -69,7 +73,15 @@ public class LightController implements Speechlet{
 			
 			String power = intent.getSlot("status").getValue();
 			
-			return sayWithCard("Lights turned: " + power);
+			try {
+				setPower(power);
+				return sayWithCard("Lights turned: " + power);
+			}
+			catch (Exception e) {
+				return sayWithCard("error: " + e.getMessage());
+			}
+			
+			
 		}
 		else {
 			return sayWithCard("Invalid Intent: " + name);
@@ -78,6 +90,23 @@ public class LightController implements Speechlet{
 	}
 
 	public void onSessionEnded(SessionEndedRequest request, Session session) throws SpeechletException {}
+	
+	void setPower(String power) throws Exception {
+		
+		HttpClient httpclient = HttpClients.createDefault();
+		HttpPost httppost = new HttpPost(Data.thinger);
+
+		String json = "{ \"in\": { \"status\": \"" + (power.equals("on") ? "ON": "OFF") +  "\"} }";
+	    StringEntity entity1 = new StringEntity(json);
+	    httppost.setEntity(entity1);
+	    httppost.setHeader("Accept", "application/json");
+	    httppost.setHeader("Content-type", "application/json");
+	    
+		//Execute and get the response.
+		HttpResponse response = httpclient.execute(httppost);
+		response.getEntity();
+	}
+	
 	
 	protected SpeechletResponse say(String text) {
         PlainTextOutputSpeech outputSpeech = new PlainTextOutputSpeech();

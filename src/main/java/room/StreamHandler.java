@@ -22,7 +22,7 @@ public class StreamHandler extends SpeechletRequestStreamHandler {
         // */
         supportedApplicationIds = new HashSet<String>();
          //supportedApplicationIds.add("amzn1.echo-sdk-ams.app.[amzn1.ask.skill.0b743978-3883-43ae-8353-97622a6f6cbe]");
-        supportedApplicationIds.add("amzn1.ask.skill.0b743978-3883-43ae-8353-97622a6f6cbe");
+        supportedApplicationIds.add(Data.appID);
     }
 	
 	static {
