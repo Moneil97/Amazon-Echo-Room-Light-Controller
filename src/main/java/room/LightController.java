@@ -1,5 +1,8 @@
 package room;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import com.amazon.speech.slu.Intent;
 import com.amazon.speech.speechlet.IntentRequest;
 import com.amazon.speech.speechlet.LaunchRequest;
@@ -15,8 +18,12 @@ import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
 
 public class LightController implements Speechlet{
+	
+	ArrayList<String> availableColors = new ArrayList<String>(Arrays.asList(new String[] {"red", "green", "blue", "white", "black"}));
 
-	public void onSessionStarted(SessionStartedRequest request, Session session) throws SpeechletException {}
+	public void onSessionStarted(SessionStartedRequest request, Session session) throws SpeechletException {
+		
+	}
 	
 	public SpeechletResponse onLaunch(LaunchRequest request, Session session) throws SpeechletException {
 		return sayWithCard("You have summoned Light Controller");
@@ -29,22 +36,45 @@ public class LightController implements Speechlet{
 		String name = intent.getName();
 		
 		if (name.equals("ChangeBrightness")) {
-			return say("Changing brightness");
+			
+			if (intent.getSlots().isEmpty())
+				return sayWithCard("No brightness value given");
+			
+			try {
+				int brightness = Integer.parseInt(intent.getSlot("brightness").getValue());
+				return sayWithCard("Brightness set to: " + brightness + "%");
+			}
+			catch(Exception e) {
+				return sayWithCard("Failed to change brightness, received value: " + intent.getSlot("brightness").getValue());
+			}
 		}
 		else if (name.equals("ChangeColor")) {
-			return say("Changing color");
+			
+			if (intent.getSlots().isEmpty())
+				return sayWithCard("No color given");
+			
+			String color = intent.getSlot("color").getValue();
+			
+			if (availableColors.contains(color))
+				return sayWithCard("Color set to: " + color);
+			else
+				return sayWithCard(color + " is not an available color");
+			
+			
 		}
 		else if (name.equals("ChangeStatus")) {
-			return say("Changing power");
+			
+			if (intent.getSlots().isEmpty())
+				return sayWithCard("No power status given");
+			
+			String power = intent.getSlot("status").getValue();
+			
+			return sayWithCard("Lights turned: " + power);
 		}
 		else {
-			return say("Invalid Intent: " + name);
+			return sayWithCard("Invalid Intent: " + name);
 		}
 		
-		
-		
-		
-		//return sayWithCard("You have sent an intent to Light Controller");
 	}
 
 	public void onSessionEnded(SessionEndedRequest request, Session session) throws SpeechletException {}
