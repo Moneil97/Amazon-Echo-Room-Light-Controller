@@ -1,5 +1,8 @@
 package room;
 
+import java.awt.Color;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.apache.http.HttpResponse;
@@ -46,7 +49,7 @@ public class LightController implements Speechlet{
 			
 			try {
 				int brightness = Integer.parseInt(intent.getSlot("brightness").getValue());
-				return sayWithCard("Brightness set to: " + brightness + "%");
+				return sayWithCard("Brightness set to " + brightness + "%");
 			}
 			catch(Exception e) {
 				return sayWithCard("Failed to change brightness, received value: " + intent.getSlot("brightness").getValue());
@@ -59,11 +62,13 @@ public class LightController implements Speechlet{
 			
 			String color = intent.getSlot("color").getValue();
 			
-			if (availableColors.contains(color))
-				return sayWithCard("Color set to: " + color);
-			else
+			try{
+				sendColor(Colors.valueOf(color));
+				return sayWithCard("Color set to " + Colors.valueOf(color));
+			}
+			catch(Exception e) {
 				return sayWithCard(color + " is not an available color");
-			
+			}
 			
 		}
 		else if (name.equals("ChangeStatus")) {
@@ -75,7 +80,7 @@ public class LightController implements Speechlet{
 			
 			try {
 				setPower(power);
-				return sayWithCard("Lights turned: " + power);
+				return sayWithCard("Lights turned " + power);
 			}
 			catch (Exception e) {
 				return sayWithCard("error: " + e.getMessage());
@@ -89,14 +94,22 @@ public class LightController implements Speechlet{
 		
 	}
 
+	
+
 	public void onSessionEnded(SessionEndedRequest request, Session session) throws SpeechletException {}
 	
 	void setPower(String power) throws Exception {
-		
+		httpPost("{ \"in\": { \"status\": \"" + (power.equals("on") ? "ON": "OFF") +  "\"} }");
+	}
+	
+	void sendColor(Colors color) throws Exception {
+		httpPost("{ \"in\":{ \"red\": " + color.r + ", \"green\": " + color.g + ", \"blue\": " + color.b + " }}");
+	}
+	
+	void httpPost(String json) throws Exception {
 		HttpClient httpclient = HttpClients.createDefault();
 		HttpPost httppost = new HttpPost(Data.thinger);
 
-		String json = "{ \"in\": { \"status\": \"" + (power.equals("on") ? "ON": "OFF") +  "\"} }";
 	    StringEntity entity1 = new StringEntity(json);
 	    httppost.setEntity(entity1);
 	    httppost.setHeader("Accept", "application/json");
@@ -106,7 +119,6 @@ public class LightController implements Speechlet{
 		HttpResponse response = httpclient.execute(httppost);
 		response.getEntity();
 	}
-	
 	
 	protected SpeechletResponse say(String text) {
         PlainTextOutputSpeech outputSpeech = new PlainTextOutputSpeech();
